@@ -1,1 +1,4 @@
 test_folders/
+.venv/
+__pycache__/
+*.pyc
