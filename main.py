@@ -1,7 +1,11 @@
 from services.file_scanner import scan_folder
 
 def main():
-    folder = input("Enter folder path: ")
+    # if you want to manually enter folderpath
+    #folder = input("Enter folder path: ")
+
+    # hardcoded folder path
+    folder = "test_folders/photos"
     scan_folder(folder)
 
 if __name__ == "__main__":
