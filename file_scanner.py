@@ -1,6 +1,6 @@
 from pathlib import Path
-from services.image_processor import process_image
-from services.video_processor import process_video
+from processors.image_processor import process_image
+from processors.video_processor import process_video
 
 #allowed video and image extensions
 SUPPORTED_IMAGE_EXTENSIONS = {

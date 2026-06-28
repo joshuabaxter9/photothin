@@ -1,4 +1,4 @@
-from services.file_scanner import scan_folder
+from file_scanner import scan_folder
 
 def main():
     # if you want to manually enter folderpath
