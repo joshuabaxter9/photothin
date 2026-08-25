@@ -80,6 +80,8 @@ def scan_folder(folder_path):
                             overexposed_fraction=result.overexposed_fraction,
                             uniqueness_score=0.0,
                             perceptual_hash=result.perceptual_hash,
+                            face_count=result.face_count,
+                            person_count=result.person_count,
                             extra_reasons=[*result.reasons, "duplicate"],
                         )
                         break
@@ -94,6 +96,8 @@ def scan_folder(folder_path):
                             overexposed_fraction=result.overexposed_fraction,
                             uniqueness_score=25.0,
                             perceptual_hash=result.perceptual_hash,
+                            face_count=result.face_count,
+                            person_count=result.person_count,
                             extra_reasons=[*result.reasons, "near_duplicate"],
                         )
                         break

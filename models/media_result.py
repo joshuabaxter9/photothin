@@ -18,4 +18,6 @@ class MediaResult:
 	final_score: float
 	classification: str
 	perceptual_hash: str = ""
+	face_count: int = 0
+	person_count: int = 0
 	reasons: list[str] = field(default_factory=list)

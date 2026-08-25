@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageOps
 
+from analysis.face_detection import detect_faces, detect_people
 from analysis.scoring import score_image
 
 
@@ -31,6 +32,12 @@ def process_image(image_path):
             "1" if pixel >= hash_pixels.mean() else "0"
             for pixel in hash_pixels.flat
         )
+        face_count = (
+            detect_faces(pixels.astype(np.uint8))
+            if sharpness >= 40
+            else 0
+        )
+        person_count = detect_people(pixels.astype(np.uint8))
 
         return score_image(
             path=image_path,
@@ -41,6 +48,8 @@ def process_image(image_path):
             underexposed_fraction=underexposed_fraction,
             overexposed_fraction=overexposed_fraction,
             perceptual_hash=perceptual_hash,
+            face_count=face_count,
+            person_count=person_count,
         )
     except (OSError, ValueError, TypeError):
         return None

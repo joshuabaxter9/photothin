@@ -12,6 +12,8 @@ def score_image(
 	overexposed_fraction,
 	uniqueness_score=50.0,
 	perceptual_hash="",
+	face_count=0,
+	person_count=0,
 	extra_reasons=None,
 ):
 	reasons = []
@@ -38,10 +40,14 @@ def score_image(
 		reasons.append("overexposed")
 	if min(width, height) < 500:
 		reasons.append("low_resolution")
+	if face_count:
+		reasons.append("contains_face")
+	if person_count or face_count:
+		reasons.append("contains_person")
 	if extra_reasons:
 		reasons.extend(reason for reason in extra_reasons if reason not in reasons)
 
-	interest_score = 50.0
+	interest_score = min(100.0, 50.0 + face_count * 5.0 + person_count * 5.0)
 	metadata_context_score = 50.0
 	final_score = round(
 		technical_quality_score * 0.65
@@ -73,5 +79,7 @@ def score_image(
 		final_score=final_score,
 		classification=classification,
 		perceptual_hash=perceptual_hash,
+		face_count=face_count,
+		person_count=person_count,
 		reasons=reasons,
 	)
