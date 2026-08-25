@@ -1,6 +1,6 @@
 from pathlib import Path
 from processors.image_processor import process_image
-from processors.video_processor import process_video
+from analysis.scoring import score_image
 
 #allowed video and image extensions
 SUPPORTED_IMAGE_EXTENSIONS = {
@@ -53,27 +53,51 @@ def scan_folder(folder_path):
         print("Path is no a folder")
         return []
     
-    media_files = []
-
-    #print name, can delete later
-    for file in path.iterdir():
-        if file in path.rglob("*"):
-            if not file.is_file():
-                continue
-
+    results = []
+    for file in path.rglob("*"):
+        if not file.is_file():
+            continue
         extension = file.suffix.lower()
 
         if extension in SUPPORTED_IMAGE_EXTENSIONS:
-            media_files.append(path)
-            process_image(file)
-        elif extension in SUPPORTED_VIDEO_EXTENSIONS:
-            media_files.append(path)
-            process_video(file)
-        else:
-            continue
-            # ignore unsupported files
+            result = process_image(file)
+            if result is not None:
+                for previous_result in results:
+                    distance = sum(
+                        left != right
+                        for left, right in zip(
+                            result.perceptual_hash, previous_result.perceptual_hash
+                        )
+                    )
+                    if distance <= 2:
+                        result = score_image(
+                            path=result.path,
+                            width=result.width,
+                            height=result.height,
+                            brightness=result.brightness,
+                            sharpness=result.sharpness,
+                            underexposed_fraction=result.underexposed_fraction,
+                            overexposed_fraction=result.overexposed_fraction,
+                            uniqueness_score=0.0,
+                            perceptual_hash=result.perceptual_hash,
+                            extra_reasons=[*result.reasons, "duplicate"],
+                        )
+                        break
+                    elif distance <= 8:
+                        result = score_image(
+                            path=result.path,
+                            width=result.width,
+                            height=result.height,
+                            brightness=result.brightness,
+                            sharpness=result.sharpness,
+                            underexposed_fraction=result.underexposed_fraction,
+                            overexposed_fraction=result.overexposed_fraction,
+                            uniqueness_score=25.0,
+                            perceptual_hash=result.perceptual_hash,
+                            extra_reasons=[*result.reasons, "near_duplicate"],
+                        )
+                        break
+                results.append(result)
 
-    return media_files
-        #print file names here
-        # print(file.name, extension)
+    return results
 

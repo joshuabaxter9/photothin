@@ -1,0 +1,77 @@
+from models.media_result import MediaResult
+
+
+def score_image(
+	*,
+	path,
+	width,
+	height,
+	brightness,
+	sharpness,
+	underexposed_fraction,
+	overexposed_fraction,
+	uniqueness_score=50.0,
+	perceptual_hash="",
+	extra_reasons=None,
+):
+	reasons = []
+	resolution_score = min(100.0, (width * height) / 2_000_000 * 100)
+	sharpness_score = min(100.0, sharpness / 500.0 * 100)
+	exposure_score = max(
+		0.0,
+		100.0
+		- underexposed_fraction * 200.0
+		- overexposed_fraction * 200.0,
+	)
+	technical_quality_score = round(
+		resolution_score * 0.25
+		+ sharpness_score * 0.45
+		+ exposure_score * 0.30,
+		2,
+	)
+
+	if sharpness < 40:
+		reasons.append("blurry")
+	if brightness < 45 or underexposed_fraction > 0.35:
+		reasons.append("too_dark")
+	if brightness > 215 or overexposed_fraction > 0.35:
+		reasons.append("overexposed")
+	if min(width, height) < 500:
+		reasons.append("low_resolution")
+	if extra_reasons:
+		reasons.extend(reason for reason in extra_reasons if reason not in reasons)
+
+	interest_score = 50.0
+	metadata_context_score = 50.0
+	final_score = round(
+		technical_quality_score * 0.65
+		+ interest_score * 0.20
+		+ uniqueness_score * 0.10
+		+ metadata_context_score * 0.05,
+		2,
+	)
+
+	if final_score >= 70:
+		classification = "KEEP"
+	elif final_score <= 25 and reasons:
+		classification = "DISCARD_CANDIDATE"
+	else:
+		classification = "REVIEW"
+
+	return MediaResult(
+		path=path,
+		width=width,
+		height=height,
+		brightness=round(brightness, 2),
+		sharpness=round(sharpness, 2),
+		underexposed_fraction=round(underexposed_fraction, 4),
+		overexposed_fraction=round(overexposed_fraction, 4),
+		technical_quality_score=technical_quality_score,
+		interest_score=interest_score,
+		uniqueness_score=uniqueness_score,
+		metadata_context_score=metadata_context_score,
+		final_score=final_score,
+		classification=classification,
+		perceptual_hash=perceptual_hash,
+		reasons=reasons,
+	)
