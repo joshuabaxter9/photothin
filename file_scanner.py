@@ -1,5 +1,6 @@
 from pathlib import Path
 from processors.image_processor import process_image
+from processors.video_processor import process_video
 from analysis.scoring import score_image
 
 #allowed video and image extensions
@@ -76,6 +77,7 @@ def scan_folder(folder_path):
                             height=result.height,
                             brightness=result.brightness,
                             contrast=result.contrast,
+                            significance_score=result.significance_score,
                             sharpness=result.sharpness,
                             underexposed_fraction=result.underexposed_fraction,
                             overexposed_fraction=result.overexposed_fraction,
@@ -93,6 +95,7 @@ def scan_folder(folder_path):
                             height=result.height,
                             brightness=result.brightness,
                             contrast=result.contrast,
+                            significance_score=result.significance_score,
                             sharpness=result.sharpness,
                             underexposed_fraction=result.underexposed_fraction,
                             overexposed_fraction=result.overexposed_fraction,
@@ -103,6 +106,11 @@ def scan_folder(folder_path):
                             extra_reasons=[*result.reasons, "near_duplicate"],
                         )
                         break
+                results.append(result)
+
+        elif extension in SUPPORTED_VIDEO_EXTENSIONS:
+            result = process_video(file)
+            if result is not None:
                 results.append(result)
 
     return results

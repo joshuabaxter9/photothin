@@ -2,10 +2,13 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import cv2
+import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 from file_scanner import scan_folder
 from processors.image_processor import process_image
+from processors.video_processor import process_video
 
 
 class PhotoPipelineTests(unittest.TestCase):
@@ -39,12 +42,15 @@ class PhotoPipelineTests(unittest.TestCase):
 
         self.assertGreaterEqual(len(people_photos), 7)
 
-    def test_mixed_fixture_ignores_videos(self):
+    def test_mixed_fixture_processes_supported_videos(self):
         results = scan_folder(Path("test_folders/mixed"))
+        video_results = [
+            result for result in results if result.path.suffix.lower() in {".mp4", ".mov"}
+        ]
 
         self.assertTrue(results)
-        self.assertTrue(all(result.path.suffix.lower() != ".mp4" for result in results))
-        self.assertTrue(all(result.path.suffix.lower() != ".mov" for result in results))
+        self.assertTrue(video_results)
+        self.assertIn("VID_20180804_191458.mp4", {result.path.name for result in video_results})
 
     def test_detects_blurry_and_accidental_flat_shots(self):
         with TemporaryDirectory() as temp_dir:
@@ -99,6 +105,26 @@ class PhotoPipelineTests(unittest.TestCase):
                 "low_significance" in ground_result.reasons
                 or "ground_only" in ground_result.reasons
             )
+
+    def test_scores_video_by_sampling_frames_according_to_length(self):
+        with TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            video_path = temp_path / "sample_video.mp4"
+
+            fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+            writer = cv2.VideoWriter(str(video_path), fourcc, 10.0, (160, 120))
+            self.assertTrue(writer.isOpened())
+
+            for _ in range(20):
+                frame = 255 * np.ones((120, 160, 3), dtype=np.uint8)
+                cv2.rectangle(frame, (20, 20), (140, 100), (0, 128, 255), -1)
+                writer.write(frame)
+            writer.release()
+
+            result = process_video(video_path)
+            self.assertIsNotNone(result)
+            self.assertEqual(result.path.name, "sample_video.mp4")
+            self.assertGreaterEqual(result.final_score, 0)
 
 
 if __name__ == "__main__":
