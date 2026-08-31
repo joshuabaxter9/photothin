@@ -13,12 +13,21 @@ _person_model = None
 
 
 def detect_faces(rgb_pixels):
-	if cv2 is None:
+	if cv2 is None or not hasattr(cv2, "CascadeClassifier"):
+		return 0
+	if not hasattr(cv2, "data") or not hasattr(cv2.data, "haarcascades"):
 		return 0
 
 	gray_pixels = cv2.cvtColor(rgb_pixels, cv2.COLOR_RGB2GRAY)
 	cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-	face_cascade = cv2.CascadeClassifier(cascade_path)
+	try:
+		face_cascade = cv2.CascadeClassifier(cascade_path)
+		test = face_cascade.empty()
+		if test:
+			return 0
+	except Exception:
+		return 0
+
 	faces = face_cascade.detectMultiScale(
 		gray_pixels,
 		scaleFactor=1.1,

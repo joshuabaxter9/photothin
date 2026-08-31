@@ -15,7 +15,7 @@ def main():
         reasons = ", ".join(result.reasons) or "no concerns detected"
         print(
             f"{result.classification}: {result.path} "
-            f"(score={result.final_score:.2f}; {reasons})"
+            f"(score={result.final_score:.2f}; significance={result.significance_score:.2f}; {reasons})"
         )
 
 if __name__ == "__main__":

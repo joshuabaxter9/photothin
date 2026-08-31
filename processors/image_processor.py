@@ -7,6 +7,46 @@ from analysis.face_detection import detect_faces, detect_people
 from analysis.scoring import score_image
 
 
+def compute_significance(pixels, grayscale):
+    height, width = grayscale.shape
+    upper_region = grayscale[: height * 2 // 3]
+    lower_region = grayscale[height * 2 // 3 :]
+
+    upper_std = float(upper_region.std())
+    lower_std = float(lower_region.std())
+    global_std = float(grayscale.std())
+    horizon_contrast = abs(float(upper_region.mean()) - float(lower_region.mean()))
+    edge_density = float(
+        np.abs(np.diff(grayscale, axis=0)).mean()
+        + np.abs(np.diff(grayscale, axis=1)).mean()
+    )
+
+    score = 0.0
+    if global_std > 18:
+        score += 25.0
+    if upper_std > 15:
+        score += 20.0
+    if lower_std > 10:
+        score += 15.0
+    if edge_density > 2.0:
+        score += 20.0
+    if horizon_contrast > 10:
+        score += 15.0
+    if upper_std > 25 and lower_std > 15:
+        score += 15.0
+
+    if upper_std < 12 and lower_std < 10 and global_std < 10:
+        score -= 45.0
+    if lower_region.mean() > 150 and upper_region.mean() < 170 and lower_std < 18:
+        score -= 20.0
+
+    score = max(0.0, min(100.0, score))
+    return score, (
+        ["scenic"] if score >= 60 else [],
+        ["low_significance", "ground_only"] if score <= 35 else [],
+    )
+
+
 def process_image(image_path):
     image_path = Path(image_path)
 
@@ -21,6 +61,7 @@ def process_image(image_path):
             + pixels[:, :, 2] * 0.114
         )
         brightness = float(grayscale.mean())
+        contrast = float(grayscale.std())
         sharpness = float(
             np.var(np.diff(grayscale, axis=0))
             + np.var(np.diff(grayscale, axis=1))
@@ -38,18 +79,22 @@ def process_image(image_path):
             else 0
         )
         person_count = detect_people(pixels.astype(np.uint8))
+        significance_score, significance_reasons = compute_significance(pixels, grayscale)
 
         return score_image(
             path=image_path,
             width=image.width,
             height=image.height,
             brightness=brightness,
+            contrast=contrast,
+            significance_score=significance_score,
             sharpness=sharpness,
             underexposed_fraction=underexposed_fraction,
             overexposed_fraction=overexposed_fraction,
             perceptual_hash=perceptual_hash,
             face_count=face_count,
             person_count=person_count,
+            extra_reasons=[reason for group in significance_reasons for reason in group],
         )
     except (OSError, ValueError, TypeError):
         return None

@@ -8,6 +8,8 @@ class MediaResult:
 	width: int
 	height: int
 	brightness: float
+	contrast: float
+	significance_score: float
 	sharpness: float
 	underexposed_fraction: float
 	overexposed_fraction: float
