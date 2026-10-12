@@ -2,3 +2,4 @@ test_folders/
 .venv/
 __pycache__/
 *.pyc
+progress_report.md

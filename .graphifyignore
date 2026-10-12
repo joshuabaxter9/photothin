@@ -1,0 +1,16 @@
+# Virtual environment: thousands of third-party files that would swamp the graph
+.venv/
+
+# Bytecode caches
+__pycache__/
+*.pyc
+
+# Sample photos and videos used for testing, not code
+test_folders/
+output/
+
+# YOLO model weights (binary)
+*.pt
+
+# Graphify's own output, so it doesn't index itself on re-runs
+graphify-out/
