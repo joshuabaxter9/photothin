@@ -6,7 +6,8 @@ import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
-from file_scanner import scan_folder
+from analysis.scoring import score_image
+from file_scanner import _mark_duplicates, scan_folder
 from processors.image_processor import process_image
 from processors.video_processor import process_video
 
@@ -126,6 +127,35 @@ class PhotoPipelineTests(unittest.TestCase):
             self.assertEqual(result.path.name, "sample_video.mp4")
             self.assertGreaterEqual(result.final_score, 0)
 
+
+    def test_videos_do_not_make_later_images_duplicates(self):
+        def make_result(name, perceptual_hash):
+            return score_image(
+                path=Path(name),
+                width=1200,
+                height=800,
+                brightness=120.0,
+                contrast=48.0,
+                sharpness=300.0,
+                underexposed_fraction=0.0,
+                overexposed_fraction=0.0,
+                perceptual_hash=perceptual_hash,
+            )
+
+        video = make_result("clip.mp4", "")
+        photo = make_result("photo.jpg", "01" * 32)
+        copy = make_result("copy.jpg", "01" * 32)
+        different = make_result("other.jpg", "10" * 32)
+
+        marked = {
+            result.path.name: result
+            for result in _mark_duplicates([video, photo, copy, different])
+        }
+
+        self.assertNotIn("duplicate", marked["photo.jpg"].reasons)
+        self.assertIn("duplicate", marked["copy.jpg"].reasons)
+        self.assertNotIn("duplicate", marked["other.jpg"].reasons)
+        self.assertNotIn("near_duplicate", marked["other.jpg"].reasons)
 
 if __name__ == "__main__":
     unittest.main()

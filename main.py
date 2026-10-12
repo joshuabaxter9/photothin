@@ -6,10 +6,15 @@ from file_scanner import scan_folder
 def main():
     parser = argparse.ArgumentParser(description="Analyze photos in a folder.")
     parser.add_argument("folder", nargs="?", default="test_folders/photos")
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=None,
+        help="number of files to analyze in parallel (default: based on CPU count; 1 disables parallelism)",
+    )
     args = parser.parse_args()
 
-    folder = args.folder
-    results = scan_folder(folder)
+    results = scan_folder(args.folder, workers=args.workers)
 
     for result in results:
         reasons = ", ".join(result.reasons) or "no concerns detected"

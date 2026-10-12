@@ -1,1 +1,11 @@
-{"0": "Entry Point and Tests", "1": "People Detection and Frame Analysis", "2": "Video Processing", "3": "Core Python Dependencies", "4": "Scoring and Result Model", "5": "Embedding and Search Libraries", "6": "Project README", "7": "Deep Learning Runtime"}
+{
+  "0": "scan_folder",
+  "1": "video_processor.py",
+  "2": "CLAUDE.md",
+  "3": "requirements.txt",
+  "4": "test_photo_pipeline.py",
+  "5": "file_scanner.py",
+  "6": "PhotoThin README",
+  "7": "face_detection.py",
+  "8": "image_processor.py"
+}

@@ -1,0 +1,74 @@
+{
+  "analysis/face_detection.py": {
+    "mtime": 1788217952.1884024,
+    "seen": 1791817900.1315615,
+    "ast_hash": "08b8d673ec6452c7576063868941840a",
+    "semantic_hash": "08b8d673ec6452c7576063868941840a"
+  },
+  "analysis/scoring.py": {
+    "mtime": 1788218530.6448977,
+    "seen": 1791817900.1315656,
+    "ast_hash": "6a4d7ffc0fbc53b1bef9f9e6c660f8dc",
+    "semantic_hash": "6a4d7ffc0fbc53b1bef9f9e6c660f8dc"
+  },
+  "file_scanner.py": {
+    "mtime": 1788219552.1228697,
+    "seen": 1791817900.1315675,
+    "ast_hash": "64c6082d532e3ba89aaa0947139cd601",
+    "semantic_hash": "64c6082d532e3ba89aaa0947139cd601"
+  },
+  "main.py": {
+    "mtime": 1788218530.6448977,
+    "seen": 1791817900.1315684,
+    "ast_hash": "926d6de23508cbd0275562f96b377acc",
+    "semantic_hash": "926d6de23508cbd0275562f96b377acc"
+  },
+  "models/media_result.py": {
+    "mtime": 1788218530.6448977,
+    "seen": 1791817900.1315691,
+    "ast_hash": "847601c55406107b78bc3065cbbfeba3",
+    "semantic_hash": "847601c55406107b78bc3065cbbfeba3"
+  },
+  "processors/image_processor.py": {
+    "mtime": 1788218887.56846,
+    "seen": 1791817900.1315699,
+    "ast_hash": "7d1a9b680cc1b91f16692b8b46181176",
+    "semantic_hash": "7d1a9b680cc1b91f16692b8b46181176"
+  },
+  "processors/video_processor.py": {
+    "mtime": 1788219552.1228697,
+    "seen": 1791817900.1315706,
+    "ast_hash": "e11db460979bd149f87c5dc9bd84d493",
+    "semantic_hash": "e11db460979bd149f87c5dc9bd84d493"
+  },
+  "tests/test_photo_pipeline.py": {
+    "mtime": 1788220060.1214714,
+    "seen": 1791817900.1315715,
+    "ast_hash": "c9a852f80bbcd890ff0264a1029ae9aa",
+    "semantic_hash": "c9a852f80bbcd890ff0264a1029ae9aa"
+  },
+  "README.md": {
+    "mtime": 1787679605.8814437,
+    "seen": 1791817900.1315722,
+    "ast_hash": "ce2ab5d6d5db801af6e9263ecd227878",
+    "semantic_hash": "ce2ab5d6d5db801af6e9263ecd227878"
+  },
+  "requirements.txt": {
+    "mtime": 1787678360.9075794,
+    "seen": 1791817900.1315727,
+    "ast_hash": "8934bcdaa95d90c7849ec9e6a4573676",
+    "semantic_hash": "8934bcdaa95d90c7849ec9e6a4573676"
+  },
+  ".claude/settings.json": {
+    "mtime": 1791817949.4033554,
+    "seen": 1791818165.2769053,
+    "ast_hash": "1a50c23dc9241fc03833b0d323ec12e7",
+    "semantic_hash": ""
+  },
+  "CLAUDE.md": {
+    "mtime": 1791817949.3978252,
+    "seen": 1791818165.2769208,
+    "ast_hash": "590ee0511921383fc9c2c97e262f1d91",
+    "semantic_hash": ""
+  }
+}

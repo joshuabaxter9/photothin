@@ -7,6 +7,20 @@ from analysis.face_detection import detect_faces, detect_people
 from analysis.scoring import score_image
 
 
+def to_grayscale(rgb_pixels):
+    """Luma grayscale as float32, matching the original float32 math exactly.
+
+    Sharpness, significance and exposure stay at full resolution on purpose:
+    the sharpness metric changes a lot with image size, so the blur threshold
+    only holds at the original resolution.
+    """
+    return (
+        rgb_pixels[:, :, 0].astype(np.float32) * 0.299
+        + rgb_pixels[:, :, 1].astype(np.float32) * 0.587
+        + rgb_pixels[:, :, 2].astype(np.float32) * 0.114
+    )
+
+
 def compute_significance(pixels, grayscale):
     height, width = grayscale.shape
     upper_region = grayscale[: height * 2 // 3]
@@ -53,13 +67,9 @@ def process_image(image_path):
     try:
         with Image.open(image_path) as source_image:
             image = ImageOps.exif_transpose(source_image).convert("RGB")
-            pixels = np.asarray(image, dtype=np.float32)
+            pixels = np.asarray(image)
 
-        grayscale = (
-            pixels[:, :, 0] * 0.299
-            + pixels[:, :, 1] * 0.587
-            + pixels[:, :, 2] * 0.114
-        )
+        grayscale = to_grayscale(pixels)
         brightness = float(grayscale.mean())
         contrast = float(grayscale.std())
         sharpness = float(
@@ -73,12 +83,8 @@ def process_image(image_path):
             "1" if pixel >= hash_pixels.mean() else "0"
             for pixel in hash_pixels.flat
         )
-        face_count = (
-            detect_faces(pixels.astype(np.uint8))
-            if sharpness >= 40
-            else 0
-        )
-        person_count = detect_people(pixels.astype(np.uint8))
+        face_count = detect_faces(pixels) if sharpness >= 40 else 0
+        person_count = detect_people(pixels)
         significance_score, significance_reasons = compute_significance(pixels, grayscale)
 
         return score_image(

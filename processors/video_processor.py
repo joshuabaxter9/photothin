@@ -5,7 +5,7 @@ import numpy as np
 
 from analysis.face_detection import detect_faces, detect_people
 from analysis.scoring import score_image
-from processors.image_processor import compute_significance
+from processors.image_processor import compute_significance, to_grayscale
 
 
 def _sample_interval_for_duration(duration_seconds):
@@ -19,12 +19,8 @@ def _sample_interval_for_duration(duration_seconds):
 
 
 def _analyze_frame(frame_rgb):
-    pixels = np.asarray(frame_rgb, dtype=np.float32)
-    grayscale = (
-        pixels[:, :, 0] * 0.299
-        + pixels[:, :, 1] * 0.587
-        + pixels[:, :, 2] * 0.114
-    )
+    pixels = np.asarray(frame_rgb, dtype=np.uint8)
+    grayscale = to_grayscale(pixels)
     brightness = float(grayscale.mean())
     contrast = float(grayscale.std())
     sharpness = float(
@@ -33,8 +29,8 @@ def _analyze_frame(frame_rgb):
     )
     underexposed_fraction = float((grayscale <= 10).mean())
     overexposed_fraction = float((grayscale >= 245).mean())
-    face_count = detect_faces(pixels.astype(np.uint8)) if sharpness >= 40 else 0
-    person_count = detect_people(pixels.astype(np.uint8))
+    face_count = detect_faces(pixels) if sharpness >= 40 else 0
+    person_count = detect_people(pixels)
     significance_score, significance_reasons = compute_significance(pixels, grayscale)
 
     reasons = []
