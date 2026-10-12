@@ -14,3 +14,6 @@ output/
 
 # Graphify's own output, so it doesn't index itself on re-runs
 graphify-out/
+
+# Review web app sessions: uploaded photos, previews and the decision database
+webapp_data/

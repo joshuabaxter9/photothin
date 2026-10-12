@@ -3,6 +3,14 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageOps
 
+try:
+    # Lets Pillow open HEIC and HEIF photos, the default format on iPhones.
+    from pillow_heif import register_heif_opener
+
+    register_heif_opener()
+except ImportError:
+    pass
+
 from analysis.face_detection import detect_faces, detect_people
 from analysis.scoring import score_image
 

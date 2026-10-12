@@ -1,3 +1,5 @@
+from pathlib import Path
+
 try:
 	import cv2
 except ImportError:
@@ -65,6 +67,12 @@ def detect_faces(rgb_pixels):
 	return len(faces)
 
 
+def _yolo_weights_path():
+	"""Use the weights in the project root, so the working folder doesn't matter."""
+	project_weights = Path(__file__).resolve().parent.parent / "yolo11n.pt"
+	return project_weights if project_weights.is_file() else Path("yolo11n.pt")
+
+
 def _get_person_model():
 	"""Load YOLO on first use.
 
@@ -80,7 +88,7 @@ def _get_person_model():
 		except ImportError:
 			_ultralytics_missing = True
 			return None
-		_person_model = YOLO("yolo11n.pt")
+		_person_model = YOLO(str(_yolo_weights_path()))
 	return _person_model
 
 

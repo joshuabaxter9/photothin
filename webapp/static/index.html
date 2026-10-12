@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PhotoThin</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='6' width='26' height='20' rx='4' fill='%232f6f5e'/%3E%3Ccircle cx='16' cy='16' r='6' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#/" aria-label="PhotoThin home">
+      <span class="brand-mark" aria-hidden="true"></span>
+      PhotoThin
+    </a>
+    <div class="topbar-session" id="topbar-session" hidden>
+      <span class="topbar-name" id="topbar-name"></span>
+      <a class="button button-quiet" href="#/">New folder</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- Start: choose a folder -->
+    <section class="view view-start" id="view-start" hidden>
+      <div class="intro">
+        <h1>Thin out a folder of photos</h1>
+        <p>Photos that look good are kept automatically. You decide on the rest, one at a time.
+           Nothing is deleted: every file ends up in an <strong>approved</strong> or a
+           <strong>discarded</strong> folder.</p>
+      </div>
+
+      <label class="dropzone" id="dropzone" for="folder-input">
+        <input type="file" id="folder-input" webkitdirectory multiple hidden>
+        <svg class="dropzone-icon" viewBox="0 0 48 48" aria-hidden="true">
+          <path d="M6 14a4 4 0 0 1 4-4h9l4 4h15a4 4 0 0 1 4 4v18a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M24 32V21m0 0-5 5m5-5 5 5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="dropzone-title">Drag a folder here</span>
+        <span class="dropzone-or">or</span>
+        <span class="button button-primary">Choose folder</span>
+        <span class="dropzone-hint" id="dropzone-hint">JPEG, PNG, HEIC and more, plus videos. Subfolders are included.</span>
+      </label>
+      <p class="form-error" id="start-error" role="alert" hidden></p>
+
+      <div class="sessions" id="sessions" hidden>
+        <h2>Previous folders</h2>
+        <ul class="session-list" id="session-list"></ul>
+      </div>
+    </section>
+
+    <!-- Upload progress -->
+    <section class="view view-upload" id="view-upload" hidden>
+      <div class="card upload-card">
+        <h2 id="upload-title">Preparing files…</h2>
+        <div class="progress" aria-hidden="true"><div class="progress-bar" id="upload-bar"></div></div>
+        <p class="muted" id="upload-detail" aria-live="polite"></p>
+        <p class="muted small" id="upload-skipped" hidden></p>
+      </div>
+    </section>
+
+    <!-- Review -->
+    <section class="view view-review" id="view-review" hidden>
+      <div class="statusbar">
+        <div class="analysis-status">
+          <div class="analysis-label">
+            <span id="analysis-text">Analyzing…</span>
+            <span class="muted" id="analysis-count"></span>
+          </div>
+          <div class="progress progress-thin" aria-hidden="true"><div class="progress-bar" id="analysis-bar"></div></div>
+        </div>
+        <dl class="stats">
+          <div class="stat"><dt>Waiting</dt><dd id="stat-waiting">0</dd></div>
+          <div class="stat stat-keep"><dt>Approved</dt><dd id="stat-approved">0</dd></div>
+          <div class="stat stat-discard"><dt>Discarded</dt><dd id="stat-discarded">0</dd></div>
+          <div class="stat"><dt>Kept automatically</dt><dd id="stat-auto">0</dd></div>
+        </dl>
+      </div>
+
+      <div class="review-empty card" id="review-empty" hidden>
+        <div class="spinner" aria-hidden="true"></div>
+        <h2>Looking for photos to review…</h2>
+        <p class="muted">Photos that need a decision will appear here as soon as they're analyzed.
+           Good photos and all videos are kept automatically, and exact copies of a file are discarded.</p>
+      </div>
+
+      <div class="review" id="review" hidden>
+        <figure class="stage">
+          <img id="preview" alt="">
+          <div class="stage-message" id="stage-message" hidden></div>
+        </figure>
+
+        <aside class="panel">
+          <div class="panel-head">
+            <span class="badge" id="item-badge"></span>
+            <span class="muted small" id="item-position"></span>
+          </div>
+          <h2 class="item-name" id="item-name"></h2>
+          <p class="item-path muted small" id="item-path"></p>
+
+          <div class="score">
+            <span class="score-value" id="item-score"></span>
+            <span class="score-label">quality score<br><span class="muted">out of 100</span></span>
+          </div>
+
+          <ul class="reasons" id="item-reasons"></ul>
+
+          <dl class="details" id="item-details"></dl>
+
+          <div class="actions">
+            <button class="button button-discard" id="discard-button" type="button">
+              Discard <kbd>D</kbd>
+            </button>
+            <button class="button button-keep" id="keep-button" type="button">
+              Keep <kbd>K</kbd>
+            </button>
+          </div>
+          <button class="button button-quiet undo" id="undo-button" type="button" disabled>
+            Undo last decision <kbd>Z</kbd>
+          </button>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Finished: download prompt -->
+    <section class="view view-finish" id="view-finish" hidden>
+      <div class="card finish-card">
+        <div class="finish-check" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h1>Review complete</h1>
+        <p class="muted" id="finish-summary"></p>
+
+        <form class="download-form" id="download-form">
+          <h2>Which folders do you want to download?</h2>
+          <label class="download-option" id="option-approved">
+            <input type="checkbox" name="bucket" value="approved" checked>
+            <span class="download-text">
+              <span class="download-title">Approved</span>
+              <span class="muted small" id="approved-detail"></span>
+            </span>
+          </label>
+          <label class="download-option" id="option-discarded">
+            <input type="checkbox" name="bucket" value="discarded">
+            <span class="download-text">
+              <span class="download-title">Discarded</span>
+              <span class="muted small" id="discarded-detail"></span>
+            </span>
+          </label>
+          <button class="button button-primary" type="submit" id="download-button">Download selected</button>
+          <p class="muted small" id="download-status" aria-live="polite"></p>
+        </form>
+
+        <details class="local-folders">
+          <summary>Where the files are on this computer</summary>
+          <dl id="folder-paths"></dl>
+        </details>
+
+        <div class="finish-actions">
+          <a class="button" href="#/">Review another folder</a>
+          <button class="button button-danger-quiet" type="button" id="delete-session">Delete this session's files</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

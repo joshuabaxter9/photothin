@@ -3,3 +3,6 @@ test_folders/
 __pycache__/
 *.pyc
 progress_report.md
+
+# Review web app sessions: uploaded copies, previews and the decision database
+webapp_data/

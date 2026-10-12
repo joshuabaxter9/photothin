@@ -1,8 +1,15 @@
 {
   "0": "scan_folder",
-  "1": "video_processor.py",
+  "1": "app.js",
   "2": "CLAUDE.md",
   "3": "requirements.txt",
-  "4": "image_processor.py",
-  "6": "PhotoThin README"
+  "4": "video_processor.py",
+  "5": "file_scanner.py",
+  "6": "PhotoThin README",
+  "7": "Store",
+  "8": "server.py",
+  "9": "test_webapp.py",
+  "10": "worker_setup.py",
+  "11": "create_app",
+  "12": "__init__.py"
 }

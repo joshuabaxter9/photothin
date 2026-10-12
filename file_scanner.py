@@ -54,25 +54,37 @@ SUPPORTED_VIDEO_EXTENSIONS = {
 MAX_DEFAULT_WORKERS = 8
 
 
+def media_kind(file_path):
+    """Return "image", "video", or None for an unsupported file."""
+    extension = Path(file_path).suffix.lower()
+    if extension in SUPPORTED_IMAGE_EXTENSIONS:
+        return "image"
+    if extension in SUPPORTED_VIDEO_EXTENSIONS:
+        return "video"
+    return None
+
+
 def _collect_media(path):
     """List supported files in a stable order, tagged as image or video."""
     media = []
     for file in sorted(path.rglob("*"), key=lambda item: str(item).lower()):
         if not file.is_file():
             continue
-        extension = file.suffix.lower()
-        if extension in SUPPORTED_IMAGE_EXTENSIONS:
-            media.append((file, "image"))
-        elif extension in SUPPORTED_VIDEO_EXTENSIONS:
-            media.append((file, "video"))
+        kind = media_kind(file)
+        if kind is not None:
+            media.append((file, kind))
     return media
 
 
 def _analyze_media(item):
     file, kind = item
-    if kind == "image":
-        return process_image(file)
-    return process_video(file)
+    try:
+        if kind == "image":
+            return process_image(file)
+        return process_video(file)
+    except Exception:
+        # One unreadable or unusual file should not stop the whole scan.
+        return None
 
 
 def _ultralytics_settings_file():
@@ -89,8 +101,38 @@ def _resolve_workers(workers, file_count):
     return max(1, min(workers, file_count))
 
 
+def iter_analyzed(media, workers=None):
+    """Analyze (path, kind) pairs and yield (item, result) in input order.
+
+    Results arrive as soon as each file and every file before it is done, so
+    callers can act on early files while later ones are still running. result
+    is None when a file could not be analyzed. Closing the generator early
+    cancels any files that have not started yet.
+    """
+    worker_count = _resolve_workers(workers, len(media))
+    if worker_count == 1:
+        for item in media:
+            yield item, _analyze_media(item)
+        return
+
+    with TemporaryDirectory(prefix="photothin_workers_") as settings_root:
+        pool = ProcessPoolExecutor(
+            max_workers=worker_count,
+            initializer=init_worker,
+            initargs=(settings_root, _ultralytics_settings_file()),
+        )
+        try:
+            for item, result in zip(media, pool.map(_analyze_media, media)):
+                yield item, result
+        finally:
+            pool.shutdown(wait=True, cancel_futures=True)
+
+
 def _hash_distance(left_hash, right_hash):
-    return sum(left != right for left, right in zip(left_hash, right_hash))
+    """Count differing bits between two equal-length strings of 0s and 1s."""
+    if len(left_hash) != len(right_hash):
+        return sum(left != right for left, right in zip(left_hash, right_hash))
+    return (int(left_hash, 2) ^ int(right_hash, 2)).bit_count()
 
 
 def _rescore_as_duplicate(result, uniqueness_score, reason):
@@ -112,28 +154,32 @@ def _rescore_as_duplicate(result, uniqueness_score, reason):
     )
 
 
-def _mark_duplicates(results):
-    """Compare each image with the images before it, after all analysis is done.
+def apply_duplicate_check(result, previous_hashes):
+    """Rescore result if it matches an earlier image's perceptual hash.
 
-    Videos have no perceptual hash, so they are skipped. Comparing against an
-    empty hash would always count as a match.
+    Videos have no perceptual hash, so they are never compared. Comparing
+    against an empty hash would always count as a match.
     """
+    if not result.perceptual_hash:
+        return result
+    for previous_hash in previous_hashes:
+        if not previous_hash:
+            continue
+        distance = _hash_distance(result.perceptual_hash, previous_hash)
+        if distance <= 2:
+            return _rescore_as_duplicate(result, 0.0, "duplicate")
+        if distance <= 8:
+            return _rescore_as_duplicate(result, 25.0, "near_duplicate")
+    return result
+
+
+def _mark_duplicates(results):
+    """Compare each image with the images before it, in order."""
     marked = []
     for result in results:
-        if result.perceptual_hash:
-            for previous_result in marked:
-                if not previous_result.perceptual_hash:
-                    continue
-                distance = _hash_distance(
-                    result.perceptual_hash, previous_result.perceptual_hash
-                )
-                if distance <= 2:
-                    result = _rescore_as_duplicate(result, 0.0, "duplicate")
-                    break
-                if distance <= 8:
-                    result = _rescore_as_duplicate(result, 25.0, "near_duplicate")
-                    break
-        marked.append(result)
+        marked.append(
+            apply_duplicate_check(result, [previous.perceptual_hash for previous in marked])
+        )
     return marked
 
 
@@ -154,19 +200,5 @@ def scan_folder(folder_path, workers=None):
         return []
 
     media = _collect_media(path)
-    if not media:
-        return []
-
-    worker_count = _resolve_workers(workers, len(media))
-    if worker_count == 1:
-        analyzed = [_analyze_media(item) for item in media]
-    else:
-        with TemporaryDirectory(prefix="photothin_workers_") as settings_root:
-            with ProcessPoolExecutor(
-                max_workers=worker_count,
-                initializer=init_worker,
-                initargs=(settings_root, _ultralytics_settings_file()),
-            ) as pool:
-                analyzed = list(pool.map(_analyze_media, media))
-
-    return _mark_duplicates([result for result in analyzed if result is not None])
+    analyzed = [result for _, result in iter_analyzed(media, workers) if result is not None]
+    return _mark_duplicates(analyzed)

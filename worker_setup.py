@@ -7,12 +7,35 @@ while another is halfway through writing it, which corrupts it. Giving each
 worker its own settings folder avoids that.
 """
 
+import multiprocessing
+import multiprocessing.connection
 import os
 import shutil
+import threading
 from pathlib import Path
 
 
+def _exit_when_parent_dies():
+    """Stop this worker if the process that started it goes away.
+
+    Normally the pool shuts its workers down. If the parent crashes or is
+    killed, the workers would otherwise keep running with nothing to report
+    to.
+    """
+    parent = multiprocessing.parent_process()
+    if parent is None:
+        return
+
+    def watch():
+        multiprocessing.connection.wait([parent.sentinel])
+        os._exit(1)
+
+    threading.Thread(target=watch, name="parent-watchdog", daemon=True).start()
+
+
 def init_worker(settings_root, settings_file):
+    _exit_when_parent_dies()
+
     worker_dir = Path(settings_root) / str(os.getpid())
     worker_dir.mkdir(parents=True, exist_ok=True)
     if settings_file and Path(settings_file).is_file():
