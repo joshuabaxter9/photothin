@@ -16,6 +16,16 @@ pip install -r requirements.txt
 
 In a new terminal, run `.venv\Scripts\Activate.ps1` again before the commands below.
 
+### GPU acceleration (optional)
+
+With an NVIDIA graphics card, PhotoThin runs part of the analysis on the GPU, which makes big folders of large photos 10 to 20% faster. It needs the CUDA build of PyTorch. The one `requirements.txt` installs is CPU-only. After the setup above, run:
+
+```powershell
+pip install --force-reinstall --no-deps torch==2.13.0 torchvision==0.28.0 --index-url https://download.pytorch.org/whl/cu130
+```
+
+The GPU is used automatically when it's available, and everything still works without one. To force a choice, set `PHOTOTHIN_DEVICE` to `cpu` or `cuda` before running, for example `$env:PHOTOTHIN_DEVICE = "cpu"`.
+
 ### Review app
 
 The main way to use PhotoThin. It's a web app that runs on your computer and lets you keep or discard each photo that needs a decision.
@@ -46,11 +56,11 @@ Some files skip the review screen and go straight to approved:
 
 - Photos the analysis rates as good.
 - Videos, since the app can't review them yet.
-- Files the analysis can't read, such as some camera RAW formats, so nothing is lost unseen.
+- Files the analysis can't read, such as a damaged photo, so nothing is lost unseen.
 
 Exact copies skip review too. When two files are byte-for-byte identical, the one with the shorter name is kept and the other goes straight to the discarded folder. So `IMG_1.jpg` is kept over `IMG_1 - Copy.jpg`. Photos that only look alike, such as burst shots or resized copies, still come to you, marked as duplicates.
 
-HEIC photos are converted to JPEG previews so the browser can show them. Downloads always contain the untouched originals.
+HEIC and camera RAW photos (`.cr2`, `.cr3`, `.nef`, `.arw`, `.dng`, `.raf`, `.orf`, `.rw2` and more) are converted to JPEG previews so the browser can show them. Downloads always contain the untouched originals.
 
 **Where things are stored.** Everything lives in the `webapp_data` folder, which git ignores. Each session has `incoming`, `approved` and `discarded` folders, and a decision moves the file between them. Decisions are also recorded in an SQLite database, `webapp_data\photothin.db`, with a log of every keep, discard and undo.
 

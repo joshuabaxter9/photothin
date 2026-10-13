@@ -1,8 +1,8 @@
 {
   "analysis/face_detection.py": {
-    "mtime": 1791824359.2883296,
-    "seen": 1791825327.3299396,
-    "ast_hash": "a89a6079158493fc204951d054b82210",
+    "mtime": 1791913211.4746318,
+    "seen": 1791913966.0785923,
+    "ast_hash": "12f36850072873db4408ceabe53c7078",
     "semantic_hash": ""
   },
   "analysis/scoring.py": {
@@ -12,9 +12,9 @@
     "semantic_hash": "6a4d7ffc0fbc53b1bef9f9e6c660f8dc"
   },
   "file_scanner.py": {
-    "mtime": 1791824349.94032,
-    "seen": 1791825327.3299437,
-    "ast_hash": "3808b4ebb3d465ae1b6560fc0396fd19",
+    "mtime": 1791913211.4746318,
+    "seen": 1791913966.0785966,
+    "ast_hash": "54dff6d5462d7ec02635aa619c0b47ca",
     "semantic_hash": ""
   },
   "main.py": {
@@ -30,15 +30,15 @@
     "semantic_hash": "847601c55406107b78bc3065cbbfeba3"
   },
   "processors/image_processor.py": {
-    "mtime": 1791824359.2883296,
-    "seen": 1791825327.329947,
-    "ast_hash": "9e064b4f8fe8c746853889d5f5597e4e",
+    "mtime": 1791911603.7088075,
+    "seen": 1791913966.0786006,
+    "ast_hash": "d7f5623777067d449b38b01f69548491",
     "semantic_hash": ""
   },
   "processors/video_processor.py": {
-    "mtime": 1791820616.1023939,
-    "seen": 1791820627.8729918,
-    "ast_hash": "b2aee87aa2f5b1f51f589999bbc5d0a1",
+    "mtime": 1791911603.7585194,
+    "seen": 1791913966.0786014,
+    "ast_hash": "8bb02fed9410dd98d0d00b6f25e55d95",
     "semantic_hash": ""
   },
   "tests/test_photo_pipeline.py": {
@@ -48,15 +48,15 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1791829597.831811,
-    "seen": 1791829713.4151626,
-    "ast_hash": "3d09f5fb24928c854f2cf4676c77c0cd",
+    "mtime": 1791913850.1541035,
+    "seen": 1791913966.078614,
+    "ast_hash": "8a934a9d78ac7b69496345145d49c48b",
     "semantic_hash": ""
   },
   "requirements.txt": {
-    "mtime": 1791829236.9897,
-    "seen": 1791829713.4151633,
-    "ast_hash": "c2caa8c13fdac2fd3bb2cfa6363734f7",
+    "mtime": 1791913850.1541035,
+    "seen": 1791913966.0786147,
+    "ast_hash": "fb26115c7cebe91e0634f4d56fb72da7",
     "semantic_hash": ""
   },
   ".claude/settings.json": {
@@ -72,9 +72,9 @@
     "semantic_hash": ""
   },
   "worker_setup.py": {
-    "mtime": 1791825000.142187,
-    "seen": 1791825327.3299568,
-    "ast_hash": "5c4c9fa4e4ee7fd9bd5680ed119b396e",
+    "mtime": 1791913211.4746318,
+    "seen": 1791913966.0786119,
+    "ast_hash": "81c5fc1ddb573325e3b5767542a18688",
     "semantic_hash": ""
   },
   "tests/test_webapp.py": {
@@ -102,9 +102,9 @@
     "semantic_hash": ""
   },
   "webapp/previews.py": {
-    "mtime": 1791824497.803371,
-    "seen": 1791825327.3299534,
-    "ast_hash": "b50e18842b90f8ac8633fa53fbe5a1d8",
+    "mtime": 1791913878.0185006,
+    "seen": 1791913966.078608,
+    "ast_hash": "29a1f0f177a2b9cff9955b193f943f35",
     "semantic_hash": ""
   },
   "webapp/server.py": {
@@ -129,6 +129,30 @@
     "mtime": 1791829597.831811,
     "seen": 1791829713.4151642,
     "ast_hash": "a06be34b141620c216adf7ed77e3481b",
+    "semantic_hash": ""
+  },
+  "analysis/device.py": {
+    "mtime": 1791913211.4746318,
+    "seen": 1791913966.0785894,
+    "ast_hash": "b0e07c58323797b4bc24f823a8fa41b7",
+    "semantic_hash": ""
+  },
+  "analysis/pixel_stats.py": {
+    "mtime": 1791913878.0185006,
+    "seen": 1791913966.0785933,
+    "ast_hash": "27eb180447d94f43e5d95e0238bc0a43",
+    "semantic_hash": ""
+  },
+  "processors/image_loader.py": {
+    "mtime": 1791911589.0013125,
+    "seen": 1791913966.0785997,
+    "ast_hash": "89c0f28ed6df66ed7c4c65efd9cc1838",
+    "semantic_hash": ""
+  },
+  "tests/test_raw_and_gpu.py": {
+    "mtime": 1791913381.8607423,
+    "seen": 1791913966.0786035,
+    "ast_hash": "6911056b5414c76e0fc408aab07941b4",
     "semantic_hash": ""
   }
 }

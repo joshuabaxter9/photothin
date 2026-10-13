@@ -1,21 +1,16 @@
 """Browser-friendly JPEG previews of photos.
 
-Browsers cannot show HEIC photos, and full-size phone photos make the review
-screen slow. Each photo under review gets a JPEG preview, made once and
-cached next to the session.
+Browsers cannot show HEIC or camera RAW photos, and full-size phone photos
+make the review screen slow. Each photo under review gets a JPEG preview,
+made once and cached next to the session.
 """
 
 import os
 import tempfile
 
-from PIL import Image, ImageOps
+from PIL import Image
 
-try:
-    from pillow_heif import register_heif_opener
-
-    register_heif_opener()
-except ImportError:
-    pass
+from processors.image_loader import load_preview_image
 
 PREVIEW_MAX_SIDE = 1600
 PREVIEW_QUALITY = 85
@@ -27,10 +22,8 @@ def ensure_preview(source_path, preview_path, max_side=PREVIEW_MAX_SIDE):
         return preview_path
     preview_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with Image.open(source_path) as source_image:
-        image = ImageOps.exif_transpose(source_image)
-        image.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
-        image = image.convert("RGB")
+    image = load_preview_image(source_path, max_side)
+    image.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
 
     # Two requests for the same preview can race. Each writes its own
     # temporary file, and the rename makes the final file appear whole.

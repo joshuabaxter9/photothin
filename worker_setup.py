@@ -33,8 +33,25 @@ def _exit_when_parent_dies():
     threading.Thread(target=watch, name="parent-watchdog", daemon=True).start()
 
 
-def init_worker(settings_root, settings_file):
+def _claim_device(gpu_slots):
+    """Send this worker to the CPU once the GPU's worker slots are taken.
+
+    gpu_slots is (shared counter, number of GPU slots). The device module
+    reads PHOTOTHIN_DEVICE when analysis first needs it.
+    """
+    if gpu_slots is None:
+        return
+    counter, slot_count = gpu_slots
+    with counter.get_lock():
+        index = counter.value
+        counter.value += 1
+    if index >= slot_count:
+        os.environ["PHOTOTHIN_DEVICE"] = "cpu"
+
+
+def init_worker(settings_root, settings_file, gpu_slots=None):
     _exit_when_parent_dies()
+    _claim_device(gpu_slots)
 
     worker_dir = Path(settings_root) / str(os.getpid())
     worker_dir.mkdir(parents=True, exist_ok=True)

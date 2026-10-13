@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from analysis.device import get_device
+
 try:
 	import cv2
 except ImportError:
@@ -98,7 +100,19 @@ def detect_people(rgb_pixels, confidence=0.25):
 		if person_model is None:
 			return 0
 		small_pixels = downscale_for_detection(rgb_pixels)
-		result = person_model(small_pixels, verbose=False)[0]
+		device = get_device()
+		try:
+			# Half precision is about twice as fast on a GPU and doesn't
+			# change which people are found. CPUs don't support it.
+			result = person_model(
+				small_pixels, device=device, half=device == "cuda", verbose=False
+			)[0]
+		except RuntimeError:
+			if device == "cpu":
+				raise
+			# Out of GPU memory: count the people on the CPU rather than
+			# report none.
+			result = person_model(small_pixels, device="cpu", verbose=False)[0]
 		return sum(
 			1
 			for class_id, score in zip(

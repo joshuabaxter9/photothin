@@ -4,8 +4,8 @@ import cv2
 import numpy as np
 
 from analysis.face_detection import detect_faces, detect_people
+from analysis.pixel_stats import compute_significance, measure_pixels
 from analysis.scoring import score_image
-from processors.image_processor import compute_significance, to_grayscale
 
 
 def _sample_interval_for_duration(duration_seconds):
@@ -20,18 +20,15 @@ def _sample_interval_for_duration(duration_seconds):
 
 def _analyze_frame(frame_rgb):
     pixels = np.asarray(frame_rgb, dtype=np.uint8)
-    grayscale = to_grayscale(pixels)
-    brightness = float(grayscale.mean())
-    contrast = float(grayscale.std())
-    sharpness = float(
-        np.var(np.diff(grayscale, axis=0))
-        + np.var(np.diff(grayscale, axis=1))
-    )
-    underexposed_fraction = float((grayscale <= 10).mean())
-    overexposed_fraction = float((grayscale >= 245).mean())
+    stats = measure_pixels(pixels)
+    brightness = stats.brightness
+    contrast = stats.contrast
+    sharpness = stats.sharpness
+    underexposed_fraction = stats.underexposed_fraction
+    overexposed_fraction = stats.overexposed_fraction
     face_count = detect_faces(pixels) if sharpness >= 40 else 0
     person_count = detect_people(pixels)
-    significance_score, significance_reasons = compute_significance(pixels, grayscale)
+    significance_score, significance_reasons = compute_significance(stats)
 
     reasons = []
     if sharpness < 40:

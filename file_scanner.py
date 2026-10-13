@@ -1,10 +1,13 @@
+import multiprocessing
 import os
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from processors.image_loader import RAW_EXTENSIONS
 from processors.image_processor import process_image
 from processors.video_processor import process_video
+from analysis.device import gpu_worker_slots
 from analysis.scoring import score_image
 from worker_setup import init_worker
 
@@ -21,14 +24,7 @@ SUPPORTED_IMAGE_EXTENSIONS = {
     ".heic",
     ".heif",
     ".avif",
-    ".raw",
-    ".cr2", 
-    ".cr3",
-    ".nef",
-    ".arw",
-    ".dng",
-    ".orf",
-    ".rw2",
+    *RAW_EXTENSIONS,
 }
 SUPPORTED_VIDEO_EXTENSIONS = {
     ".mp4",
@@ -115,11 +111,14 @@ def iter_analyzed(media, workers=None):
             yield item, _analyze_media(item)
         return
 
+    # Workers beyond what fits in GPU memory run on the CPU, so a small GPU
+    # still helps without being overloaded.
+    gpu_slots = (multiprocessing.Value("i", 0), gpu_worker_slots(worker_count))
     with TemporaryDirectory(prefix="photothin_workers_") as settings_root:
         pool = ProcessPoolExecutor(
             max_workers=worker_count,
             initializer=init_worker,
-            initargs=(settings_root, _ultralytics_settings_file()),
+            initargs=(settings_root, _ultralytics_settings_file(), gpu_slots),
         )
         try:
             for item, result in zip(media, pool.map(_analyze_media, media)):
