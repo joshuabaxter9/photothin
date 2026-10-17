@@ -2,7 +2,7 @@ from pathlib import Path
 
 import numpy as np
 
-from analysis.face_detection import detect_faces, detect_people
+from analysis.face_detection import analyze_faces, detect_people
 from analysis.pixel_stats import compute_significance, measure_pixels
 from analysis.scoring import score_image
 from processors.image_loader import load_image
@@ -21,7 +21,7 @@ def process_image(image_path):
             "1" if pixel >= hash_pixels.mean() else "0"
             for pixel in hash_pixels.flat
         )
-        face_count = detect_faces(pixels) if stats.sharpness >= 40 else 0
+        face_count, eyes_closed = analyze_faces(pixels) if stats.sharpness >= 40 else (0, False)
         person_count = detect_people(pixels)
         significance_score, significance_reasons = compute_significance(stats)
 
@@ -38,6 +38,7 @@ def process_image(image_path):
             perceptual_hash=perceptual_hash,
             face_count=face_count,
             person_count=person_count,
+            eyes_closed=eyes_closed,
             extra_reasons=[reason for group in significance_reasons for reason in group],
         )
     except (OSError, ValueError, TypeError):

@@ -424,7 +424,8 @@ class Store:
 
         Kept automatically: videos (no review screen for them yet), files the
         analysis could not read, and photos the scorer classified as KEEP.
-        Everything else waits for the user.
+        Discarded automatically: photos the scorer classified as
+        DISCARD_CANDIDATE. Everything else waits for the user.
         """
         with self._write_lock:
             item = self.get_item(item_id)
@@ -433,7 +434,7 @@ class Store:
                     "analysis": "failed",
                     "reasons": json.dumps([COULD_NOT_ANALYZE]),
                 }
-                auto_keep = True
+                auto_decision = KEEP
             else:
                 fields = {
                     "analysis": "done",
@@ -446,7 +447,12 @@ class Store:
                     "face_count": result.face_count,
                     "person_count": result.person_count,
                 }
-                auto_keep = item["kind"] == "video" or result.classification == "KEEP"
+                if item["kind"] == "video" or result.classification == "KEEP":
+                    auto_decision = KEEP
+                elif result.classification == "DISCARD_CANDIDATE":
+                    auto_decision = DISCARD
+                else:
+                    auto_decision = None
 
             assignments = ", ".join(f"{column} = ?" for column in fields)
             with self._connect() as connection:
@@ -454,8 +460,8 @@ class Store:
                     f"UPDATE items SET {assignments} WHERE id = ?",
                     (*fields.values(), item_id),
                 )
-            if auto_keep:
-                self._apply_decision(self.get_item(item_id), KEEP, "auto")
+            if auto_decision:
+                self._apply_decision(self.get_item(item_id), auto_decision, "auto")
 
     # ----- items and decisions -----------------------------------------------
 
@@ -584,6 +590,9 @@ class Store:
             "failed": sum(item["analysis"] == "failed" for item in items),
             "auto_kept": sum(
                 item["decided_by"] == "auto" and item["decision"] == KEEP for item in items
+            ),
+            "auto_discarded": sum(
+                item["decided_by"] == "auto" and item["decision"] == DISCARD for item in items
             ),
             "exact_duplicates": sum(item["analysis"] == "skipped" for item in items),
             "approved": sum(item["decision"] == KEEP for item in items),

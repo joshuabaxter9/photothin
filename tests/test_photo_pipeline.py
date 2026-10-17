@@ -157,5 +157,52 @@ class PhotoPipelineTests(unittest.TestCase):
         self.assertNotIn("duplicate", marked["other.jpg"].reasons)
         self.assertNotIn("near_duplicate", marked["other.jpg"].reasons)
 
+    def test_faces_lift_a_photo_to_keep_unless_eyes_are_closed(self):
+        def score(**faces):
+            # Decent but unremarkable on its own: lands in the review band.
+            return score_image(
+                path=Path("photo.jpg"),
+                width=1200,
+                height=800,
+                brightness=120.0,
+                contrast=48.0,
+                sharpness=300.0,
+                underexposed_fraction=0.0,
+                overexposed_fraction=0.0,
+                **faces,
+            )
+
+        self.assertEqual(score().classification, "REVIEW")
+        self.assertEqual(score(face_count=1).classification, "KEEP")
+        eyes_closed = score(face_count=1, eyes_closed=True)
+        self.assertEqual(eyes_closed.classification, "DISCARD_CANDIDATE")
+        self.assertIn("eyes_closed", eyes_closed.reasons)
+        self.assertLess(eyes_closed.final_score, score().final_score)
+
+    def test_anything_below_fifty_is_a_discard_candidate(self):
+        result = process_image(Path("test_folders/mixed/IMG_20171223_170953.jpg"))
+        flat = Image.new("RGB", (1200, 1200), (128, 128, 128))
+        with TemporaryDirectory() as temp_dir:
+            flat_path = Path(temp_dir) / "flat.jpg"
+            flat.save(flat_path)
+            flat_result = process_image(flat_path)
+
+        self.assertGreaterEqual(result.final_score, 50)
+        self.assertNotEqual(result.classification, "DISCARD_CANDIDATE")
+        self.assertLess(flat_result.final_score, 50)
+        self.assertEqual(flat_result.classification, "DISCARD_CANDIDATE")
+
+    def test_false_faces_in_fences_are_rejected(self):
+        # Haar finds four "faces" here, three of them in a fence. Only the
+        # toddler is real.
+        result = process_image(Path("test_folders/mixed/IMG_1657.JPG"))
+        self.assertEqual(result.face_count, 1)
+
+    def test_squinting_smiles_are_not_eyes_closed(self):
+        result = process_image(Path("test_folders/mixed/IMG_20180803_124707.jpg"))
+        self.assertEqual(result.face_count, 3)
+        self.assertNotIn("eyes_closed", result.reasons)
+        self.assertEqual(result.classification, "KEEP")
+
 if __name__ == "__main__":
     unittest.main()

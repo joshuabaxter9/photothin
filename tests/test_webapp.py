@@ -27,8 +27,17 @@ def heic_bytes(image):
 
 
 def flat_gray_photo():
-    # No detail at all: blurry, low contrast, low score. Always needs review.
+    # No detail at all: blurry, low contrast, low score. Always discarded.
     return Image.new("RGB", (1200, 900), (128, 128, 128))
+
+
+def striped_photo(background=(70, 110, 150), stripe=(190, 170, 120)):
+    # Sharp but plain: scores in the middle. Always needs review.
+    image = Image.new("RGB", (1200, 900), background)
+    draw = ImageDraw.Draw(image)
+    for x in range(0, 1200, 60):
+        draw.rectangle([x, 0, x + 30, 900], fill=stripe)
+    return image
 
 
 def video_bytes(folder):
@@ -78,9 +87,9 @@ class WebAppTests(unittest.TestCase):
         session = self.client.post("/api/sessions", json={"name": "Trip"}).json()
         session_id = session["id"]
 
-        gray = jpeg_bytes(flat_gray_photo())
+        gray = jpeg_bytes(striped_photo())
         self.assertEqual(self.upload(session_id, "day1/gray.jpg", gray).status_code, 201)
-        self.assertEqual(self.upload(session_id, "day2/gray copy.heic", heic_bytes(flat_gray_photo())).status_code, 201)
+        self.assertEqual(self.upload(session_id, "day2/gray copy.heic", heic_bytes(striped_photo())).status_code, 201)
         self.assertEqual(self.upload(session_id, "clip.mp4", video_bytes(self.temp.name)).status_code, 201)
         self.assertEqual(self.upload(session_id, "notes.txt", b"hello").status_code, 415)
 
@@ -157,10 +166,24 @@ class WebAppTests(unittest.TestCase):
         self.assertEqual(response.status_code, 409)
         self.assertEqual(self.client.get(f"/api/sessions/{session_id}/download/discarded").status_code, 409)
 
+    def test_low_scoring_photos_are_discarded_automatically(self):
+        session_id = self.client.post("/api/sessions", json={"name": "Blanks"}).json()["id"]
+        self.upload(session_id, "blank.jpg", jpeg_bytes(flat_gray_photo()))
+        self.upload(session_id, "stripes.jpg", jpeg_bytes(striped_photo()))
+        self.client.post(f"/api/sessions/{session_id}/analyze")
+        state = self.wait_for_analysis(session_id)
+
+        self.assertEqual([item["rel_path"] for item in state["queue"]], ["stripes.jpg"])
+        self.assertEqual(state["counts"]["auto_discarded"], 1)
+        self.assertTrue((Path(state["folders"]["discarded"]) / "blank.jpg").is_file())
+        blank = self.app.state.store.get_item(self.upload_id_for(session_id, "blank.jpg"))
+        self.assertEqual(blank["decided_by"], "auto")
+        self.assertLess(blank["final_score"], 50)
+
     def test_exact_copies_are_discarded_automatically(self):
         session_id = self.client.post("/api/sessions", json={"name": "Copies"}).json()["id"]
-        photo = jpeg_bytes(flat_gray_photo())
-        different = jpeg_bytes(Image.new("RGB", (1200, 900), (90, 120, 160)))
+        photo = jpeg_bytes(striped_photo())
+        different = jpeg_bytes(striped_photo(background=(150, 70, 110), stripe=(120, 190, 170)))
         # Alphabetically the copies sort before the original, because a
         # space sorts before a period. The original must still be kept.
         self.upload(session_id, "IMG_1 - Copy.jpg", photo)

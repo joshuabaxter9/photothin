@@ -22,4 +22,5 @@ class MediaResult:
 	perceptual_hash: str = ""
 	face_count: int = 0
 	person_count: int = 0
+	eyes_closed: bool = False
 	reasons: list[str] = field(default_factory=list)

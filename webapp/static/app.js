@@ -22,6 +22,7 @@ const REASONS = {
   duplicate: ["Duplicate", "bad"],
   near_duplicate: ["Near duplicate", "bad"],
   exact_duplicate: ["Exact copy", "bad"],
+  eyes_closed: ["Eyes closed", "bad"],
   contains_face: ["Faces", "good"],
   contains_person: ["People", "good"],
   scenic: ["Scenic", "good"],
@@ -640,8 +641,8 @@ function renderFinish() {
 
   const parts = [`${plural(counts.total, "file")} sorted`];
   parts.push(`${counts.approved.toLocaleString()} approved (${counts.auto_kept.toLocaleString()} automatically)`);
-  parts.push(counts.exact_duplicates
-    ? `${counts.discarded.toLocaleString()} discarded (${plural(counts.exact_duplicates, "exact copy", "exact copies")} automatically)`
+  parts.push(counts.auto_discarded
+    ? `${counts.discarded.toLocaleString()} discarded (${counts.auto_discarded.toLocaleString()} automatically)`
     : `${counts.discarded.toLocaleString()} discarded`);
   if (counts.failed) parts.push(`${plural(counts.failed, "file")} couldn't be analyzed and were kept`);
   $("finish-summary").textContent = `${parts.join(" · ")}.`;

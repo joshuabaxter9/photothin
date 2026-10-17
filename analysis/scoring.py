@@ -1,5 +1,16 @@
 from models.media_result import MediaResult
 
+# Photos scoring at or above KEEP_SCORE are kept automatically, and photos
+# below DISCARD_SCORE are discarded automatically. Everything in between is
+# reviewed.
+KEEP_SCORE = 70
+DISCARD_SCORE = 50
+
+# A face makes a photo much more likely to be worth keeping, unless everyone
+# in it has their eyes closed.
+FACE_BONUS = 20.0
+EYES_CLOSED_PENALTY = 20.0
+
 
 def score_image(
 	*,
@@ -16,6 +27,7 @@ def score_image(
 	perceptual_hash="",
 	face_count=0,
 	person_count=0,
+	eyes_closed=False,
 	extra_reasons=None,
 ):
 	reasons = []
@@ -50,6 +62,8 @@ def score_image(
 		reasons.append("low_resolution")
 	if face_count:
 		reasons.append("contains_face")
+	if eyes_closed:
+		reasons.append("eyes_closed")
 	if person_count or face_count:
 		reasons.append("contains_person")
 	if significance_score >= 60:
@@ -61,18 +75,22 @@ def score_image(
 
 	interest_score = min(100.0, 50.0 + face_count * 5.0 + person_count * 5.0)
 	metadata_context_score = 50.0
-	final_score = round(
+	final_score = (
 		technical_quality_score * 0.55
 		+ significance_score * 0.20
 		+ interest_score * 0.15
 		+ uniqueness_score * 0.07
-		+ metadata_context_score * 0.03,
-		2,
+		+ metadata_context_score * 0.03
 	)
+	if eyes_closed:
+		final_score -= EYES_CLOSED_PENALTY
+	elif face_count:
+		final_score += FACE_BONUS
+	final_score = round(max(0.0, min(100.0, final_score)), 2)
 
-	if final_score >= 70:
+	if final_score >= KEEP_SCORE:
 		classification = "KEEP"
-	elif final_score <= 25 and reasons:
+	elif final_score < DISCARD_SCORE:
 		classification = "DISCARD_CANDIDATE"
 	else:
 		classification = "REVIEW"
@@ -96,5 +114,6 @@ def score_image(
 		perceptual_hash=perceptual_hash,
 		face_count=face_count,
 		person_count=person_count,
+		eyes_closed=eyes_closed,
 		reasons=reasons,
 	)

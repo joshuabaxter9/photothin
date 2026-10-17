@@ -149,6 +149,7 @@ def _rescore_as_duplicate(result, uniqueness_score, reason):
         perceptual_hash=result.perceptual_hash,
         face_count=result.face_count,
         person_count=result.person_count,
+        eyes_closed=result.eyes_closed,
         extra_reasons=[*result.reasons, reason],
     )
 

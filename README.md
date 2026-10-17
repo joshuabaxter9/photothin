@@ -58,6 +58,10 @@ Some files skip the review screen and go straight to approved:
 - Videos, since the app can't review them yet.
 - Files the analysis can't read, such as a damaged photo, so nothing is lost unseen.
 
+Photos scoring below 50 skip review the other way and go straight to the discarded folder. Videos are never discarded automatically.
+
+**How faces count.** A photo with a face gets 20 extra points, which is usually enough to keep it automatically. If everyone in the photo has their eyes closed, it loses 20 points instead and is marked **Eyes closed**. Faces are found with OpenCV and confirmed with Google's MediaPipe face landmarker (`face_landmarker.task`), which rejects false faces in things like fences and trees and rates how closed each eye is. Squinting into the sun doesn't count as closed.
+
 Exact copies skip review too. When two files are byte-for-byte identical, the one with the shorter name is kept and the other goes straight to the discarded folder. So `IMG_1.jpg` is kept over `IMG_1 - Copy.jpg`. Photos that only look alike, such as burst shots or resized copies, still come to you, marked as duplicates.
 
 HEIC and camera RAW photos (`.cr2`, `.cr3`, `.nef`, `.arw`, `.dng`, `.raf`, `.orf`, `.rw2` and more) are converted to JPEG previews so the browser can show them. Downloads always contain the untouched originals.
@@ -74,7 +78,7 @@ Prints a verdict for every file in a folder without moving anything. Useful for 
 python main.py "C:\path\to\your\photos"
 ```
 
-Each file is labeled KEEP, REVIEW or DISCARD_CANDIDATE, with a score and the reasons, such as blurry, duplicate or contains_person. With no folder given, it uses `test_folders\photos`.
+Each file is labeled KEEP (70 or more), REVIEW, or DISCARD_CANDIDATE (below 50), with a score and the reasons, such as blurry, duplicate, contains_person or eyes_closed. With no folder given, it uses `test_folders\photos`.
 
 Files are analyzed in parallel, using half your CPU's logical cores, up to 8. To choose the number yourself, or turn parallelism off with 1:
 
@@ -90,8 +94,8 @@ Each run takes a few seconds to start while the YOLO model (`yolo11n.pt`) loads.
 python -m unittest discover tests
 ```
 
-Five tests use the sample media in `test_folders\mixed`, which isn't in the repository. Without that folder they fail, and the rest still run. To run only the tests that don't need it:
+Eight tests use the sample media in `test_folders\mixed`, which isn't in the repository. Without that folder they fail, and the rest still run. To run only the tests that don't need it:
 
 ```powershell
-python -m unittest discover tests -k WebApp -k CleanRelative -k blurry_and_accidental -k scenic -k sampling_frames -k videos_do_not
+python -m unittest discover tests -k WebApp -k CleanRelative -k blurry_and_accidental -k scenic -k sampling_frames -k videos_do_not -k faces_lift
 ```
